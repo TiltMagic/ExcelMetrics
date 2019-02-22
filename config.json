@@ -1,0 +1,14 @@
+{
+    "SHEET_TITLE": "Bid Breakdown",
+    "JOB_TYPES": ["Shell & Core",
+                  "Tenant Improvement",
+                  "Office",
+                  "Residential",
+                  "Parking Garage"
+                  ],
+    "COLUMN_COLOR": "00FFFF",
+    "WITH_FORMULAS": "False",
+    "WITH_RAISE": "False",
+    "LABOR $/Hr Title": "Labor $/Hr",
+    "LABOR HOURS/UNIT AREA": "Labor Hours/Unit Area"
+}
