@@ -13,7 +13,7 @@ SHEET_TITLE = setup.sheet_title
 JOB_TYPES = '"{}"'.format(setup.job_types)
 
 
-def edit_all_files(sheet_title):
+def setup_all_files(sheet_title):
     '''
     Gets files
     Builds file manager objects
@@ -26,9 +26,9 @@ def edit_all_files(sheet_title):
 
 def main():
     '''
-    This runs the "whole-shebang"
+    This runs the entire program
     '''
-    edit_all_files(SHEET_TITLE)
+    setup_all_files(SHEET_TITLE)
     error_logger.log_it()
 
     '''
@@ -40,13 +40,13 @@ def main():
     #
     # print(things)
 
-    excel_file_paths = setup.get_file_paths(".xlsx")
-    column_managers = setup.get_column_managers(excel_file_paths, SHEET_TITLE)
-    manager = column_managers[0]
-
-    report = Report(manager, "Labor $/Hr", "Labor Hours/Unit Area")
-    print("\n")
-    print(report.all_metrics)
+    # excel_file_paths = setup.get_file_paths(".xlsx")
+    # column_managers = setup.get_column_managers(excel_file_paths, SHEET_TITLE)
+    # manager = column_managers[0]
+    #
+    # report = Report(manager, "Labor $/Hr", "Labor Hours/Unit Area")
+    # print("\n")
+    # print(report.all_metrics)
 
     # data = avg.get_data_structure(manager, "Labor $/Hr")
     # print("\n")

@@ -7,8 +7,8 @@
                   "Parking Garage"
                   ],
     "COLUMN_COLOR": "00FFFF",
-    "WITH_FORMULAS": "False",
-    "WITH_RAISE": "False",
+    "WITH_FORMULAS": false,
+    "WITH_RAISE": true,
     "LABOR $/Hr Title": "Labor $/Hr",
     "LABOR HOURS/UNIT AREA": "Labor Hours/Unit Area"
 }

@@ -11,21 +11,15 @@ import sys
 with open("config.json", "r") as config_file:
     configs = json.load(config_file)
 
-sheet_title = configs['SHEET_TITLE']
-job_types = ", ".join(configs['JOB_TYPES'])
-column_color = configs['COLUMN_COLOR']
-
-# look for better sytax for below
-
-if configs['WITH_FORMULAS'] == "True":
-    with_formulas = True
-else:
-    with_formulas = False
-
-if configs['WITH_RAISE'] == 'True':
-    with_raise = True
-else:
-    with_raise = False
+try:
+    sheet_title = configs['SHEET_TITLE']
+    job_types = ", ".join(configs['JOB_TYPES'])
+    column_color = configs['COLUMN_COLOR']
+    with_formulas = configs['WITH_FORMULAS']
+    with_raise = configs['WITH_RAISE']
+except Exception as traceback_error:
+    statement = "Trouble loading from config file"
+    error_logger.logger(statement, traceback_error)
 
 # read from config.json ^^^^^^^^^^^^^^^^^^^
 
@@ -45,19 +39,19 @@ def get_column_managers(excel_file_paths, SHEET_TITLE):
     try:
         return [columnmanager.ColumnManager(file_path, SHEET_TITLE)
                 for file_path in excel_file_paths]
-    except:
+    except Exception as traceback_error:
         statement = "Problem getting column managers"
-        error_logger.logger(statement)
+        error_logger.logger(statement, traceback_error)
 
 
-def get_base_bid_values(columnmanager, title):
+def get_base_bid_values(columnmanager, title, row=2):
     '''
     Returns list of all systems pertaining to Base Bid only, under "System Column"
     This allows metrics to be calculated for Base Bid values only and not Alternates
     '''
 
-    bid_item_values = columnmanager.get_column_values("Bid Item", row=2)
-    system_values = columnmanager.get_column_values(title, row=2)
+    bid_item_values = columnmanager.get_column_values("Bid Item", row=row)
+    system_values = columnmanager.get_column_values(title, row=row)
 
     results = []
 
@@ -67,18 +61,20 @@ def get_base_bid_values(columnmanager, title):
     return results
 
 
-def build_metrics_columns(manager):
+def build_metrics_columns(manager, row=1):
     """
     Uses excel manager object to build new metrics columns
     """
     try:
-        manager.gen_labordollar_perhour_column(with_formulas)
-        manager.gen_laborhours_unitarea(with_formulas)
+        manager.gen_labordollar_perhour_column(with_formulas, row=row)
+        manager.gen_laborhours_unitarea(with_formulas, row=row)
         # Allow color_column method to take multiple column arguments *args
         manager.color_column("Labor $/Hr", column_color)
         manager.color_column("Labor Hours/Unit Area", column_color)
-    except error as e:
-        error_logger.logger(e)
+    except Exception as traceback_error:
+        print(traceback_error)
+        statement = "Trouble building metrics column"
+        error_logger.logger(statement, traceback_error)
 
 
 def dress_excel_file(JOB_TYPES, column_managers):
@@ -92,10 +88,13 @@ def dress_excel_file(JOB_TYPES, column_managers):
             build_metrics_columns(manager)
             manager.add_validation(JOB_TYPES)
             manager.save_doc()
-        except:
-            statement = "Problem with column manager named {}".format(manager)
-            error_logger.logger(statement)
-            manager.show_error_location()  # this is printed out of order to log file should be at top
+            # location = manager.get_error_location()
+            # print(location)
+        except Exception as traceback_error:
+            location = manager.get_error_location()
+            print(location)
+            statement = "Problem with column manager named {}\n{}".format(manager, location)
+            error_logger.logger(statement, traceback_error)
 
             if with_raise:
                 error_logger.log_it()

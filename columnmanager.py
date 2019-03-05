@@ -29,9 +29,9 @@ class ColumnManager:
         """
         try:
             return openpyxl.load_workbook(file_location)
-        except:
+        except Exception as traceback_error:
             statement = "Problem laoding workbook from {}".format(file_location)
-            error_logger.logger(statement)
+            error_logger.logger(statement, traceback_error)
 
     def save_doc(self):
         # Change to enable saving to any location *args
@@ -46,10 +46,10 @@ class ColumnManager:
         """
         try:
             return workbook_name[sheet_name]
-        except:
+        except Exception as traceback_error:
             statement = "Problem finding {} worksheet from {} workbook".format(
                 sheet_name, workbook_name)
-            error_logger.logger(statement)
+            error_logger.logger(statement, traceback_error)
 
     def make_new_column(self, title):
         """
@@ -64,9 +64,9 @@ class ColumnManager:
             try:
                 max_column = self.sheet.max_column
                 self.sheet.cell(row=1, column=max_column+1).value = title
-            except:
+            except Exception as traceback_error:
                 statement = "Something went wrong with building column {}".format(title)
-                self.logger(statement)
+                self.logger(statement, traceback_error)
 
     def get_column_titles(self, row=1):
         """
@@ -81,9 +81,9 @@ class ColumnManager:
             column_titles = [self.sheet.cell(row=row, column=column).value
                              for column in range(1, max_column+1)]
             return column_titles
-        except:
+        except Exception as traceback_error:
             statement = "Problem retrieving column titles"
-            error_logger.logger(statement)
+            error_logger.logger(statement, traceback_error)
 
     def get_column_titles_with_index(self, row=1):
         """
@@ -94,9 +94,9 @@ class ColumnManager:
             column_titles = {self.sheet.cell(row=row, column=column).value: column
                              for column in range(1, max_column+1)}
             return column_titles
-        except:
+        except Exception as traceback_error:
             statement = "Problem retrieving column titles"
-            error_logger.logger(statement)
+            error_logger.logger(statement, traceback_error)
 
     def get_column_index(self, title, row=1):
         """
@@ -105,9 +105,9 @@ class ColumnManager:
         try:
             columns = self.get_column_titles_with_index(row)
             return columns[title]
-        except:
+        except Exception as traceback_error:
             statement = "Problem finding column titled {}".format(title)
-            error_logger.logger(statement)
+            error_logger.logger(statement, traceback_error)
 
     def get_column_cells(self, title, row=1):
         """
@@ -116,9 +116,9 @@ class ColumnManager:
         index = self.get_column_index(title, row)
         try:
             return [cell for cell in list(self.sheet.columns)[index - 1]]
-        except:
+        except Exception as traceback_error:
             statement = "Problem finding cell for column w/ title {}".format(title)
-            error_logger.logger(statement)
+            error_logger.logger(statement, traceback_error)
 
     def get_column_cell_names(self, title, row=1):
         """
@@ -129,9 +129,9 @@ class ColumnManager:
             cell_names = ["{}{}".format(cell.column, cell.row)
                           for cell in cells]
             return cell_names
-        except:
+        except Execption as traceback_error:
             statement = "Problem building cell name from {} column".format(title)
-            error_logger.logger(statement)
+            error_logger.logger(statement, traceback_error)
 
     def get_column_values(self, title, row=1):
         """
@@ -141,28 +141,28 @@ class ColumnManager:
             cells = self.get_column_cells(title, row)
             values = [cell.value for cell in cells]
             return values
-        except:
+        except Exception as traceback_error:
             statement = "Problem retrieving cells for column {}".format(title)
-            error_logger.logger(statement)
+            error_logger.logger(statement, traceback_error)
 
-    def set_column_values(self, title, values, row_start=2):
+    def set_column_values(self, title, values, row=2):
         """
         Sets cell values for given column
         """
         try:
             index = self.get_column_index(title)
             cells_to_set = self.get_column_cells(title)[1:]
-        except:
+        except Exception as traceback_error:
             statement = "Problem with inputs to set_column_values"
-            error_logger.logger(statement)
+            error_logger.logger(statement, traceback_error)
 
         for i in range(len(cells_to_set)):
             try:
-                self.sheet.cell(row=row_start, column=index).value = values[i]
-            except:
+                self.sheet.cell(row=row, column=index).value = values[i]
+            except Exception as traceback_error:
                 statement = "Problem setting cell values"
-                error_logger.logger(statement)
-            row_start += 1
+                error_logger.logger(statement, traceback_error)
+            row += 1
 
     def print_column_values(self, title, row=1):
         """
@@ -172,35 +172,36 @@ class ColumnManager:
         for cell in cells:
             print(cell.value)
 
-    def divide_columns_values(self, first_title, second_title):
+    def divide_columns_values(self, first_title, second_title, row=1):
         # maybe change return type to tuple
         """
         Divides two columns and return list w/ resulting values
         """
-        numerator = self.get_column_values(first_title)
-        denominator = self.get_column_values(second_title)
+        numerator = self.get_column_values(first_title, row=row)
+        denominator = self.get_column_values(second_title, row=row)
         result = []
         for i in range(1, len(numerator)):
             try:
                 result.append(numerator[i]/denominator[i])
             except (TypeError, ZeroDivisionError) as e:
+                # Should the above exception be logged somehow?
                 result.append("None")
 
         return result
 
-    def divide_columns_formula(self, first_title, second_title):
+    def divide_columns_formula(self, first_title, second_title, row=1):
         """
         Return list of divided cell values from given columns
         """
-        numerator_names = self.get_column_cell_names(first_title)
-        denominator_names = self.get_column_cell_names(second_title)
+        numerator_names = self.get_column_cell_names(first_title, row=row)
+        denominator_names = self.get_column_cell_names(second_title, row=row)
         divided_formulas = ["={}/{}".format(numerator_names[i],
                                             denominator_names[i])
                             for i
                             in range(1, len(numerator_names))]
         return divided_formulas
 
-    def gen_labordollar_perhour_column(self, with_formulas=False, clm_title=labor_dollar_hr_title):
+    def gen_labordollar_perhour_column(self, with_formulas=False, clm_title=labor_dollar_hr_title, row=1):
         """
         Generates Labor $/Hour column with values
         with_formulas parameter toggles excel formulas shown in metrics column
@@ -211,28 +212,29 @@ class ColumnManager:
         try:
             if with_formulas == True:
                 new_values = self.divide_columns_formula("Total Labor $",
-                                                         "Total Hrs")
+                                                         "Total Hrs", row=row)
             elif with_formulas == False:
-                new_values = self.divide_columns_values("Total Labor $", "Total Hrs")
+                new_values = self.divide_columns_values("Total Labor $", "Total Hrs", row=row)
 
-            self.set_column_values(clm_title, new_values)
-        except error as e:
-            error_logger.logger(e)
-        # this is fucked up - works but should be changed
+            self.set_column_values(clm_title, new_values, row=row+1)
+        except Exception as traceback_error:
+            statement = "Trouble with generating Labor $ / Hour column"
+            error_logger.logger(statement, traceback_error)
 
-    def gen_laborhours_unitarea(self, with_formulas=False, clm_title=labor_dollar_unit_area_title):
+    def gen_laborhours_unitarea(self, with_formulas=False, clm_title=labor_dollar_unit_area_title, row=1):
         """
         Generates Labor Hours/Unit Area column w/ values
         with_formulas parameter toggles excel formulas shown in metrics column
         Edit with_formulas in config file.
         """
+        # Should there be a try block here?
         self.make_new_column(clm_title)
         if with_formulas == True:
-            new_values = self.divide_columns_formula("Total Hrs", "Unit")
+            new_values = self.divide_columns_formula("Total Hrs", "Unit", row=row)
         elif with_formulas == False:
-            new_values = self.divide_columns_values("Total Hrs", "Unit")
+            new_values = self.divide_columns_values("Total Hrs", "Unit", row=row)
 
-        self.set_column_values(clm_title, new_values)
+        self.set_column_values(clm_title, new_values, row=row+1)
 
     def color_column(self, title, color="B3FFB3"):
         """
@@ -255,16 +257,18 @@ class ColumnManager:
             self.sheet.add_data_validation(dv)
             cell = self.sheet["A1"]
             dv.add(cell)
-        except error as e:
-            error_logger.logger(e)
+        except Exception as traceback_error:
+            statement = "Trouble with adding validation drop-down menu"
+            error_logger.logger(statement, traceback_error)
 
     def get_jobtype(self):
         return self.sheet.cell(row=1, column=1).value
 
-    def show_error_location(self):
+    def get_error_location(self):
         error_statement = " Errors above found with file: {}\n".format(self.file_name.upper())
         line = "-" * len(error_statement)
         output = ("{}\n"
                   "           {}"
                   "           {}".format(line, error_statement, line))
-        error_logger.logger(output)
+        # error_logger.logger(output)
+        return output
