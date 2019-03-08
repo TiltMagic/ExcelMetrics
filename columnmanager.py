@@ -18,10 +18,11 @@ labor_dollar_unit_area_title = configs['LABOR HOURS/UNIT AREA']
 class ColumnManager:
 
     def __init__(self, file_location, sheet_name):
-        self.workbook = self.load_workbook(file_location)
-        self.sheet = self.get_sheet(self.workbook, sheet_name)
         self.file_location = file_location
         self.file_name = list(file_location.split("\\"))[-1]
+        self.workbook = self.load_workbook(file_location)
+        self.sheet = self.get_sheet(self.workbook, sheet_name)
+
 
     def load_workbook(self, file_location):
         """
@@ -38,7 +39,11 @@ class ColumnManager:
         """
         Saves ColumnManager changes to excel workbook
         """
-        self.workbook.save(self.file_location)
+        try:
+            self.workbook.save(self.file_location)
+        except Exception as traceback_error:
+            statement = "Unable to save file {}".format(self.file_name)
+            error_logger.logger(statement, traceback_error)
 
     def get_sheet(self, workbook_name, sheet_name):
         """
@@ -47,8 +52,8 @@ class ColumnManager:
         try:
             return workbook_name[sheet_name]
         except Exception as traceback_error:
-            statement = "Problem finding {} worksheet from {} workbook".format(
-                sheet_name, workbook_name)
+            statement = "Can't find sheet {}".format(
+                sheet_name)
             error_logger.logger(statement, traceback_error)
 
     def make_new_column(self, title):
@@ -58,7 +63,7 @@ class ColumnManager:
         column_titles = self.get_column_titles()
 
         if title in column_titles:
-            statement = "Column title {} already exists for file {}".format(title, self.file_name)
+            statement = "Column title {} NOT added- already exists for file {}".format(title, self.file_name)
             error_logger.logger(statement)
         else:
             try:
@@ -68,13 +73,32 @@ class ColumnManager:
                 statement = "Something went wrong with building column {}".format(title)
                 self.logger(statement, traceback_error)
 
+    def value_exists(self, value):
+        '''
+        Checks if given value exists anywhere in excel file
+        '''
+        for row in self.sheet.values:
+            for data in row:
+                if data == value:
+                    return True
+
+    def group_by_exists(self):
+        '''
+        Checks if cell 'A1' has the value of 'Group By'
+        Method is meant to check if formatting should occur
+        '''
+        try:
+            return self.sheet['A1'].value == 'Group By'
+        except Exception as traceback_error:
+            statement = "Problem reading value from cell 'A1'"
+            error_logger.logger(statement, traceback_error)
+
+
     def get_column_titles(self, row=1):
         """
         Returns list with column title
         """
 
-        # Soluttion to add metrics columns if conditional formatting row exists
-        # would probably be here
         max_column = self.sheet.max_column
 
         try:
@@ -173,7 +197,6 @@ class ColumnManager:
             print(cell.value)
 
     def divide_columns_values(self, first_title, second_title, row=1):
-        # maybe change return type to tuple
         """
         Divides two columns and return list w/ resulting values
         """
@@ -204,12 +227,12 @@ class ColumnManager:
     def gen_labordollar_perhour_column(self, with_formulas=False, clm_title=labor_dollar_hr_title, row=1):
         """
         Generates Labor $/Hour column with values
-        with_formulas parameter toggles excel formulas shown in metrics column
-        Edit with_fromulas in config file.
+        'with_formulas' parameter toggles excel formulas shown in metrics column
+        Edit 'with_fromulas' in config file.
         """
-        self.make_new_column(clm_title)
 
         try:
+            self.make_new_column(clm_title)
             if with_formulas == True:
                 new_values = self.divide_columns_formula("Total Labor $",
                                                          "Total Hrs", row=row)
@@ -223,22 +246,27 @@ class ColumnManager:
 
     def gen_laborhours_unitarea(self, with_formulas=False, clm_title=labor_dollar_unit_area_title, row=1):
         """
-        Generates Labor Hours/Unit Area column w/ values
-        with_formulas parameter toggles excel formulas shown in metrics column
-        Edit with_formulas in config file.
+        Generates 'Labor Hours/Unit Area' column w/ values
+        'with_formulas' parameter toggles excel formulas shown in metrics column
+        Edit 'with_formulas' in config file.
         """
-        # Should there be a try block here?
-        self.make_new_column(clm_title)
-        if with_formulas == True:
-            new_values = self.divide_columns_formula("Total Hrs", "Unit", row=row)
-        elif with_formulas == False:
-            new_values = self.divide_columns_values("Total Hrs", "Unit", row=row)
 
-        self.set_column_values(clm_title, new_values, row=row+1)
+        try:
+            self.make_new_column(clm_title)
+            if with_formulas == True:
+                new_values = self.divide_columns_formula("Total Hrs", "Unit", row=row)
+            elif with_formulas == False:
+                new_values = self.divide_columns_values("Total Hrs", "Unit", row=row)
+
+            self.set_column_values(clm_title, new_values, row=row+1)
+        except Exception as traceback_error:
+            statement = "Trouble with generating {} column".format(clm_title)
+            error_logger.logger(statement, traceback_error)
+
 
     def color_column(self, title, color="B3FFB3"):
         """
-        read color from config file, keep B3FFB3 as default
+        read color from config file, keep 'B3FFB3' as default
         """
         cells = self.get_column_cells(title)
         for cell in cells:
@@ -248,27 +276,21 @@ class ColumnManager:
 
     def add_validation(self, validation_string):
         '''
-        Inserts a new row then adds a data validation drop down list to cell "A1".
-        validation_string parameter contains list of values added to drop down list.
+        Inserts a new row then adds a data validation drop down list to cell 'A1'.
+        'validation_string' parameter contains list of values added to drop down list.
         '''
+
         try:
             self.sheet.insert_rows(1)
             dv = DataValidation(type="list", formula1=validation_string, allow_blank=True)
             self.sheet.add_data_validation(dv)
             cell = self.sheet["A1"]
             dv.add(cell)
+            error_logger.logger('Drop down menu added')
         except Exception as traceback_error:
             statement = "Trouble with adding validation drop-down menu"
             error_logger.logger(statement, traceback_error)
 
+
     def get_jobtype(self):
         return self.sheet.cell(row=1, column=1).value
-
-    def get_error_location(self):
-        error_statement = " Errors above found with file: {}\n".format(self.file_name.upper())
-        line = "-" * len(error_statement)
-        output = ("{}\n"
-                  "           {}"
-                  "           {}".format(line, error_statement, line))
-        # error_logger.logger(output)
-        return output

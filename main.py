@@ -13,23 +13,33 @@ SHEET_TITLE = setup.sheet_title
 JOB_TYPES = '"{}"'.format(setup.job_types)
 
 
-def setup_all_files(sheet_title):
+def run_program(sheet_title):
     '''
     Gets files
     Builds file manager objects
     Adds new metric columns and data validation to all column manager objects
     '''
     excel_file_paths = setup.get_file_paths(".xlsx")
-    column_managers = setup.get_column_managers(excel_file_paths, sheet_title)
-    setup.dress_excel_file(JOB_TYPES, column_managers)
+    # column_managers = setup.get_column_managers(excel_file_paths, sheet_title)
+    # setup.dress_excel_file(JOB_TYPES, column_managers)
+    try:
+        setup.format_excel_files(excel_file_paths, JOB_TYPES)
+    except Exception as traceback_error:
+        error_logger.logger(traceback_error=traceback_error)
 
 
 def main():
     '''
     This runs the entire program
     '''
-    setup_all_files(SHEET_TITLE)
-    error_logger.log_it()
+    run_program(SHEET_TITLE)
+    error_logger.build_log_file()
+
+
+if __name__ == "__main__":
+    main()
+
+
 
     '''
     Comments below are experimenting w/ average file/ data structure
@@ -53,7 +63,3 @@ def main():
     # # print(data['Residential'])
     # for value in data['Residential']:
     #     print(value + value[0])
-
-
-if __name__ == "__main__":
-    main()

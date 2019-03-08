@@ -6,14 +6,18 @@ import os
 log_info = []
 
 
-def logger(statement, traceback_error=""):
+def logger(statement=None, traceback_error=None):
     '''
     Prints, then appends any errors to log_info list
     '''
-    print(statement)
-    log_info.append(statement)
-    if setup.with_raise:
+    if statement:
+        log_info.append(statement)
+        print(statement)
+
+    if traceback_error:
         log_info.append(traceback_error)
+        if setup.with_raise:
+            print(traceback_error)
 
 
 def log_the_info():
@@ -39,11 +43,10 @@ def build_error_dir():
         None
     except Exception as traceback_error:
         statement = "Trouble building 'log_files' directory"
-        print(statement)
-        print(traceback_error)
+        logger(statement, traceback_error)
 
 
-def log_it():
+def build_log_file():
     '''
     Creates new file in log_files dir and logs all errors to new log file
     '''

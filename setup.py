@@ -25,23 +25,14 @@ except Exception as traceback_error:
 
 
 def get_file_paths(file_extention):
+    '''
+    Returns file paths for Excel files only- in current working directory
+    '''
     cwd = os.getcwd()
     files = os.listdir(cwd)
     excel_files = [file for file in files if file[len(file)-5:] == file_extention]
     excel_file_paths = [cwd + "\{}".format(file_name) for file_name in excel_files]
     return excel_file_paths
-
-
-def get_column_managers(excel_file_paths, SHEET_TITLE):
-    """
-    Return list of manager objects for each excel, given file paths
-    """
-    try:
-        return [columnmanager.ColumnManager(file_path, SHEET_TITLE)
-                for file_path in excel_file_paths]
-    except Exception as traceback_error:
-        statement = "Problem getting column managers"
-        error_logger.logger(statement, traceback_error)
 
 
 def get_base_bid_values(columnmanager, title, row=2):
@@ -68,34 +59,73 @@ def build_metrics_columns(manager, row=1):
     try:
         manager.gen_labordollar_perhour_column(with_formulas, row=row)
         manager.gen_laborhours_unitarea(with_formulas, row=row)
-        # Allow color_column method to take multiple column arguments *args
         manager.color_column("Labor $/Hr", column_color)
         manager.color_column("Labor Hours/Unit Area", column_color)
+        error_logger.logger('Metrics columns added')
     except Exception as traceback_error:
         print(traceback_error)
         statement = "Trouble building metrics column"
         error_logger.logger(statement, traceback_error)
 
 
-def dress_excel_file(JOB_TYPES, column_managers):
-    """
-    Adds datavalidation and metrics columns to given
-    list of excel file manager objects
-    """
-    for manager in column_managers:
-        # this try block prevents traceback errors from being shown in console?
-        try:
-            build_metrics_columns(manager)
-            manager.add_validation(JOB_TYPES)
-            manager.save_doc()
-            # location = manager.get_error_location()
-            # print(location)
-        except Exception as traceback_error:
-            location = manager.get_error_location()
-            print(location)
-            statement = "Problem with column manager named {}\n{}".format(manager, location)
-            error_logger.logger(statement, traceback_error)
+def get_formatted_filepath_status(file_path):
+    '''
+    Formats filepath into file status output
+    '''
+    file_name = list(file_path.split("\\"))[-1]
+    statement = " Status below for file: {}\n".format(file_name.upper())
+    line = "-" * len(statement)
+    output = ("{}\n"
+              "           {}"
+              "           {}".format(line, statement, line))
+    return output
 
-            if with_raise:
-                error_logger.log_it()
-                raise
+
+def format_excel_file(JOB_TYPES, file_path):
+    '''
+    Fromat excel file to final result given file path
+    '''
+    try:
+        column_manager = columnmanager.ColumnManager(file_path, sheet_title)
+    except Exception as traceback_error:
+        statement_1 = "Problem manipulating file from file path"
+        statement_2 = "Make sure Excel file is formatted properly- maybe try to re-export Extension from Enterprise\n"
+        error_logger.logger("{}\n{}".format(statement_1, statement_2), traceback_error)
+
+
+    if column_manager.group_by_exists():
+        try:
+            build_metrics_columns(column_manager)
+            column_manager.add_validation(JOB_TYPES)
+            column_manager.save_doc()
+        except Exception as traceback_error:
+            # location = manager.get_error_location()
+            statement = "Problem building metrics columns for {}".format(location)
+            error_logger.logger(statement, traceback_error)
+    elif column_manager.value_exists('Labor $/Hr') and column_manager.value_exists('Labor Hours/Unit Area') and column_manager.sheet['A2'].value == 'Group By':
+        formatted_check_symbol = "  /\n\/"
+        error_logger.logger(formatted_check_symbol)
+        # error_logger.logger('Good')
+    else:
+        statement_1 = "Excel file was NOT formatted"
+        statement_2 = ("Make sure 'Group By' text is located in cell A1- and rest of Excel file is formatted properly"
+                      "\n..OR re-export extension from Enterprise and try again")
+        error_logger.logger(statement_1)
+        error_logger.logger(statement_2)
+
+
+def format_excel_files(file_paths, JOB_TYPES):
+    '''
+    Format all excel files to final result given list of file paths
+    '''
+    # try:
+    for file_path in file_paths:
+        status_output = get_formatted_filepath_status(file_path)
+        error_logger.logger(status_output)
+        try:
+            format_excel_file(JOB_TYPES, file_path)
+
+        except Exception as traceback_error:
+            statement_1 = "Problem manipulating file from filepath"
+            statement_2 = "Make sure Excel file is formatted properly- maybe try to re-export from Enterprise\n"
+            error_logger.logger("{}\n{}".format(statement_1, statement_2), traceback_error)
