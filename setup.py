@@ -17,6 +17,7 @@ try:
     column_color = configs['COLUMN_COLOR']
     with_formulas = configs['WITH_FORMULAS']
     with_raise = configs['WITH_RAISE']
+    new_columns = configs['NEW_COLUMNS']
 except Exception as traceback_error:
     statement = "Trouble loading from config file"
     error_logger.logger(statement, traceback_error)
@@ -52,16 +53,14 @@ def get_base_bid_values(columnmanager, title, row=2):
     return results
 
 
-def build_metrics_columns(manager, row=1):
+def build_metrics_columns(manager, new_columns=new_columns, row=1):
     """
     Uses excel manager object to build new metrics columns
     """
     try:
-        manager.gen_new_metric_column("Labor $/Hr", "Total Labor $", "Total Hrs", with_formulas=with_formulas)
-        manager.gen_new_metric_column("Labor Hours/Unit Area", "Total Hrs", "Unit", with_formulas=with_formulas)
-
-        manager.color_column("Labor $/Hr", column_color)
-        manager.color_column("Labor Hours/Unit Area", column_color)
+        for new_column in new_columns:
+            manager.gen_new_metric_column(new_column['title'], new_column['numerator'], new_column['denominator'], with_formulas=with_formulas)
+            manager.color_column(new_column['title'], column_color)
     except Exception as traceback_error:
         print(traceback_error)
         statement = "Trouble building metrics column"
@@ -80,10 +79,22 @@ def get_formatted_filepath_status(file_path):
               "           {}".format(line, statement, line))
     return output
 
+def all_new_columns_exist(column_manager):
+    '''
+    Checks if all new columns specified in json file exist in column_manager's Excel file
+    '''
+    for new_column in new_columns:
+        if column_manager.value_exists(new_column['title']):
+            pass
+        else:
+            return False
+
+    return True
+
 
 def format_excel_file(JOB_TYPES, file_path):
     '''
-    Fromat excel file to final result given file path
+    Format excel file to final result given file path
     '''
     try:
         column_manager = columnmanager.ColumnManager(file_path, sheet_title)
@@ -102,7 +113,7 @@ def format_excel_file(JOB_TYPES, file_path):
             # location = manager.get_error_location()
             statement = "Problem building metrics columns for {}".format(location)
             error_logger.logger(statement, traceback_error)
-    elif column_manager.value_exists('Labor $/Hr') and column_manager.value_exists('Labor Hours/Unit Area') and column_manager.sheet['A2'].value == 'Group By':
+    elif all_new_columns_exist(column_manager) and column_manager.sheet['A2'].value == 'Group By':
         formatted_check_symbol = "  /\n\/"
         error_logger.logger(formatted_check_symbol)
         # error_logger.logger('Good')

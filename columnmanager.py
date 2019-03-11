@@ -69,7 +69,7 @@ class ColumnManager:
             try:
                 max_column = self.sheet.max_column
                 self.sheet.cell(row=1, column=max_column+1).value = title
-                error_logger.logger("Column {} added".format(title))
+                error_logger.logger("{} column title added".format(title))
             except Exception as traceback_error:
                 statement = "Something went wrong with building column {}".format(title)
                 self.logger(statement, traceback_error)
@@ -176,10 +176,9 @@ class ColumnManager:
                 self.sheet.cell(row=row, column=column_index).value = values[i]
 
             except Exception as traceback_error:
-                statement = "Problem setting cell values"
-                error_logger.logger(statement, traceback_error)
+                # statement = "Problem setting cell values"
+                error_logger.logger(traceback_error=traceback_error)
             row += 1
-
 
 
     def set_column_values(self, title, values, row=2):
@@ -196,14 +195,15 @@ class ColumnManager:
         if self.add_values_to_cell_range(cells_to_set, values, index, row):
             error_logger.logger("Values added to column {}".format(title))
 
-        for i in range(len(cells_to_set)):
             try:
-                self.sheet.cell(row=row, column=index).value = values[i]
 
+                for i in range(len(cells_to_set)):
+                    self.sheet.cell(row=row, column=index).value = values[i]
+                    row += 1
             except Exception as traceback_error:
                 statement = "Problem setting cell values for column {}".format(title)
                 error_logger.logger(statement, traceback_error)
-            row += 1
+                # row += 1
 
 
     def print_column_values(self, title, row=1):
@@ -234,22 +234,19 @@ class ColumnManager:
         """
         Return list of divided cell values from given columns
         """
-        numerator_names = self.get_column_cell_names(first_title, row=row)
-        denominator_names = self.get_column_cell_names(second_title, row=row)
-        divided_formulas = ["={}/{}".format(numerator_names[i + 1],
-                                            denominator_names[i + 1])
-                            for i
-                            in range(1, len(numerator_names))]
-        
-        for value in numerator_names:
-            print(value)
+        try:
+            numerator_names = self.get_column_cell_names(first_title, row=row)
+            denominator_names = self.get_column_cell_names(second_title, row=row)
+            divided_formulas = ["={}/{}".format(numerator_names[i],
+                                                denominator_names[i])
+                                for i
+                                in range(2, len(numerator_names))]
 
-        for value in divided_formulas:
-            print(value)
+            return divided_formulas
 
-
-
-        return divided_formulas
+        except Exception as traceback_error:
+            statement = "Problem dividing {} values with {} values".format(first_title, second_title)
+            error_logger.logger(statement, traceback_error)
 
 
     def gen_new_metric_column(self, new_title, numer_column, denom_column, with_formulas=False, row=1):
@@ -267,6 +264,7 @@ class ColumnManager:
             self.set_column_values(new_title, new_values, row=row+1)
             # error_logger.logger("Column {} added with values".format(new_title))
         except Exception as traceback_error:
+            print(traceback_error)
             statement = "Trouble with generating {} column".format(new_title)
             error_logger.logger(statement, traceback_error)
 
@@ -275,7 +273,7 @@ class ColumnManager:
         """
         read color from config file, keep 'B3FFB3' as default
         """
-        cells = self.get_column_cells(title)
+        cells = self.get_column_cells(title)[:-1]
         for cell in cells:
             cell.fill = PatternFill(start_color=color,
                                     end_color=color,

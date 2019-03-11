@@ -7,8 +7,17 @@
                   "Parking Garage"
                   ],
     "COLUMN_COLOR": "00FFFF",
-    "WITH_FORMULAS": true,
+    "WITH_FORMULAS": false,
     "WITH_RAISE": false,
+    "NEW_COLUMNS": [
+                    {"title": "Labor $/Hr", "numerator": "Total Labor $", "denominator": "Total Hrs"},
+                    {"title": "Mat Labor.", "numerator": "Total Mat.", "denominator": "Inc. Labor Hrs"}
+                  ],
     "LABOR $/Hr Title": "Labor $/Hr",
-    "LABOR HOURS/UNIT AREA": "Labor Hours/Unit Area"
+    "LABOR HOURS/UNIT AREA": "Labor Hours/Unit Area",
+    "NEW_COLUMNS_1": [
+                    {"title": "Labor $/Hr", "numerator": "Total Labor $", "denominator": "Total Hrs"},
+                    {"title": "Labor Hours/Unit Area", "numerator": "Total Hrs", "denominator": "Unit"},
+                    {"title": "Labor Hours/Unit Area", "numerator": "Total Hrs", "denominator": "Unit"}
+                  ]
 }
