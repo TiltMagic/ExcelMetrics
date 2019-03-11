@@ -20,8 +20,7 @@ def run_program(sheet_title):
     Adds new metric columns and data validation to all column manager objects
     '''
     excel_file_paths = setup.get_file_paths(".xlsx")
-    # column_managers = setup.get_column_managers(excel_file_paths, sheet_title)
-    # setup.dress_excel_file(JOB_TYPES, column_managers)
+
     try:
         setup.format_excel_files(excel_file_paths, JOB_TYPES)
     except Exception as traceback_error:

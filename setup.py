@@ -57,11 +57,11 @@ def build_metrics_columns(manager, row=1):
     Uses excel manager object to build new metrics columns
     """
     try:
-        manager.gen_labordollar_perhour_column(with_formulas, row=row)
-        manager.gen_laborhours_unitarea(with_formulas, row=row)
+        manager.gen_new_metric_column("Labor $/Hr", "Total Labor $", "Total Hrs", with_formulas=with_formulas)
+        manager.gen_new_metric_column("Labor Hours/Unit Area", "Total Hrs", "Unit", with_formulas=with_formulas)
+
         manager.color_column("Labor $/Hr", column_color)
         manager.color_column("Labor Hours/Unit Area", column_color)
-        error_logger.logger('Metrics columns added')
     except Exception as traceback_error:
         print(traceback_error)
         statement = "Trouble building metrics column"
@@ -109,7 +109,7 @@ def format_excel_file(JOB_TYPES, file_path):
     else:
         statement_1 = "Excel file was NOT formatted"
         statement_2 = ("Make sure 'Group By' text is located in cell A1- and rest of Excel file is formatted properly"
-                      "\n..OR re-export extension from Enterprise and try again")
+                      "\n..OR re-export Extension from Enterprise and try again")
         error_logger.logger(statement_1)
         error_logger.logger(statement_2)
 

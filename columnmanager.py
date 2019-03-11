@@ -69,6 +69,7 @@ class ColumnManager:
             try:
                 max_column = self.sheet.max_column
                 self.sheet.cell(row=1, column=max_column+1).value = title
+                error_logger.logger("Column {} added".format(title))
             except Exception as traceback_error:
                 statement = "Something went wrong with building column {}".format(title)
                 self.logger(statement, traceback_error)
@@ -169,6 +170,18 @@ class ColumnManager:
             statement = "Problem retrieving cells for column {}".format(title)
             error_logger.logger(statement, traceback_error)
 
+    def add_values_to_cell_range(self, cell_range, values, column_index, row):
+        for i in range(len(cell_range)):
+            try:
+                self.sheet.cell(row=row, column=column_index).value = values[i]
+
+            except Exception as traceback_error:
+                statement = "Problem setting cell values"
+                error_logger.logger(statement, traceback_error)
+            row += 1
+
+
+
     def set_column_values(self, title, values, row=2):
         """
         Sets cell values for given column
@@ -180,13 +193,18 @@ class ColumnManager:
             statement = "Problem with inputs to set_column_values"
             error_logger.logger(statement, traceback_error)
 
+        if self.add_values_to_cell_range(cells_to_set, values, index, row):
+            error_logger.logger("Values added to column {}".format(title))
+
         for i in range(len(cells_to_set)):
             try:
                 self.sheet.cell(row=row, column=index).value = values[i]
+
             except Exception as traceback_error:
-                statement = "Problem setting cell values"
+                statement = "Problem setting cell values for column {}".format(title)
                 error_logger.logger(statement, traceback_error)
             row += 1
+
 
     def print_column_values(self, title, row=1):
         """
@@ -218,49 +236,38 @@ class ColumnManager:
         """
         numerator_names = self.get_column_cell_names(first_title, row=row)
         denominator_names = self.get_column_cell_names(second_title, row=row)
-        divided_formulas = ["={}/{}".format(numerator_names[i],
-                                            denominator_names[i])
+        divided_formulas = ["={}/{}".format(numerator_names[i + 1],
+                                            denominator_names[i + 1])
                             for i
                             in range(1, len(numerator_names))]
+        
+        for value in numerator_names:
+            print(value)
+
+        for value in divided_formulas:
+            print(value)
+
+
+
         return divided_formulas
 
-    def gen_labordollar_perhour_column(self, with_formulas=False, clm_title=labor_dollar_hr_title, row=1):
-        """
-        Generates Labor $/Hour column with values
-        'with_formulas' parameter toggles excel formulas shown in metrics column
-        Edit 'with_fromulas' in config file.
-        """
 
+    def gen_new_metric_column(self, new_title, numer_column, denom_column, with_formulas=False, row=1):
+        '''
+        Divides existing numerator column values with demoninator column values
+        Creates new column with divided values
+        '''
         try:
-            self.make_new_column(clm_title)
-            if with_formulas == True:
-                new_values = self.divide_columns_formula("Total Labor $",
-                                                         "Total Hrs", row=row)
-            elif with_formulas == False:
-                new_values = self.divide_columns_values("Total Labor $", "Total Hrs", row=row)
+            self.make_new_column(new_title)
+            if with_formulas:
+                new_values = self.divide_columns_formula(numer_column, denom_column, row=row)
+            else:
+                new_values = self.divide_columns_values(numer_column, denom_column, row=row)
 
-            self.set_column_values(clm_title, new_values, row=row+1)
+            self.set_column_values(new_title, new_values, row=row+1)
+            # error_logger.logger("Column {} added with values".format(new_title))
         except Exception as traceback_error:
-            statement = "Trouble with generating Labor $ / Hour column"
-            error_logger.logger(statement, traceback_error)
-
-    def gen_laborhours_unitarea(self, with_formulas=False, clm_title=labor_dollar_unit_area_title, row=1):
-        """
-        Generates 'Labor Hours/Unit Area' column w/ values
-        'with_formulas' parameter toggles excel formulas shown in metrics column
-        Edit 'with_formulas' in config file.
-        """
-
-        try:
-            self.make_new_column(clm_title)
-            if with_formulas == True:
-                new_values = self.divide_columns_formula("Total Hrs", "Unit", row=row)
-            elif with_formulas == False:
-                new_values = self.divide_columns_values("Total Hrs", "Unit", row=row)
-
-            self.set_column_values(clm_title, new_values, row=row+1)
-        except Exception as traceback_error:
-            statement = "Trouble with generating {} column".format(clm_title)
+            statement = "Trouble with generating {} column".format(new_title)
             error_logger.logger(statement, traceback_error)
 
 
