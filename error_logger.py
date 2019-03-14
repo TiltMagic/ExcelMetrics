@@ -1,6 +1,6 @@
 import timestamp
 import logging
-import setup
+import format_file
 import os
 
 log_info = []
@@ -16,7 +16,7 @@ def logger(statement=None, traceback_error=None):
 
     if traceback_error:
         log_info.append(traceback_error)
-        if setup.with_raise:
+        if format_file.with_raise:
             print(traceback_error)
 
 

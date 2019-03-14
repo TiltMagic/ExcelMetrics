@@ -1,7 +1,9 @@
-import setup
+import format_file
 import json
 import error_logger
-from avg import Report
+import columnmanager
+import avg
+from report import Report
 
 '''
 # dress the excel files
@@ -9,8 +11,10 @@ from avg import Report
 # build summary file
 '''
 
-SHEET_TITLE = setup.sheet_title
-JOB_TYPES = '"{}"'.format(setup.job_types)
+SHEET_TITLE = format_file.sheet_title
+JOB_TYPES = '"{}"'.format(format_file.job_types)
+
+
 
 
 def run_program(sheet_title):
@@ -19,13 +23,16 @@ def run_program(sheet_title):
     Builds file manager objects
     Adds new metric columns and data validation to all column manager objects
     '''
-    excel_file_paths = setup.get_file_paths(".xlsx")
+    excel_file_paths = format_file.get_file_paths(".xlsx")
 
     try:
-        setup.format_excel_files(excel_file_paths, JOB_TYPES)
+        format_file.format_excel_files(excel_file_paths, JOB_TYPES)
     except Exception as traceback_error:
         error_logger.logger(traceback_error=traceback_error)
 
+    column_managers = [columnmanager.ColumnManager(path, SHEET_TITLE) for path in excel_file_paths]
+    result = avg.build_final_data_set(column_managers)
+    print(result)
 
 def main():
     '''
@@ -43,22 +50,3 @@ if __name__ == "__main__":
     '''
     Comments below are experimenting w/ average file/ data structure
     '''
-
-    # with open("config.json", "r") as data:
-    #     things = json.load(data)
-    #
-    # print(things)
-
-    # excel_file_paths = setup.get_file_paths(".xlsx")
-    # column_managers = setup.get_column_managers(excel_file_paths, SHEET_TITLE)
-    # manager = column_managers[0]
-    #
-    # report = Report(manager, "Labor $/Hr", "Labor Hours/Unit Area")
-    # print("\n")
-    # print(report.all_metrics)
-
-    # data = avg.get_data_structure(manager, "Labor $/Hr")
-    # print("\n")
-    # # print(data['Residential'])
-    # for value in data['Residential']:
-    #     print(value + value[0])

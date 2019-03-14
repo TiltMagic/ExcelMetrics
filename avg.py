@@ -1,41 +1,71 @@
+import format_file
+import columnmanager
+import report
+import json
 
-import setup
+with open("config.json", "r") as config_file:
+    configs = json.load(config_file)
 
-'''
-This module contains functions for colecting metrics data
-and calculating averages
-'''
+NEW_COLUMNS = configs['NEW_COLUMNS']
+SHEET_TITLE = configs['SHEET_TITLE']
+METRIC_TITLES = [column['title'] for column in configs['NEW_COLUMNS']]
+JOB_TYPES = configs['JOB_TYPES']
+SYSTEMS = configs['SYSTEMS']
 
 
-class Report:
-    def __init__(self, column_manager, *column_titles):
-        self.column_manager = column_manager
-        self.column_titles = column_titles
-        self.get_job_type()
-        self.get_all_metrics()
+final_data = {}
 
-    def get_job_type(self):
-        self.job_type = self.column_manager.get_jobtype()
 
-    def get_data_structure(self, column_title):
-        """
-        Build data structure with systems and corresponding values
-        """
-        file_data = {column_title: {}}
-        systems = setup.get_base_bid_values(self.column_manager, "System")
-        values = setup.get_base_bid_values(self.column_manager, column_title)
 
-        if len(systems) == len(values):
-            try:
-                system_values = list(zip(systems, values))
+def build_data_set_template(metric_titles=METRIC_TITLES):
+    final_data = {}
 
-                for system_value in system_values:
-                    file_data[column_title][system_value[0]] = system_value[1]
-            except error as e:
-                print(e.message + "&&&&&&&&&&&&&&&&")
-                print("Values list and systems list are not the same length")
+    for job in JOB_TYPES:
+        final_data[job] = {}
+        for metric in METRIC_TITLES:
+            final_data[job][metric] = {}
+            for system in SYSTEMS:
+                final_data[job][metric][system] = []
 
-        return file_data
 
-    def get_all_metrics(self):
-        self.all_metrics = [self.get_data_structure(title) for title in self.column_titles]
+    return final_data
+
+
+def get_all_reports(column_managers, metric_titles=METRIC_TITLES):
+    reports = [report.Report(manager, metric_titles).get_final_report() for manager in column_managers]
+    return reports
+
+def build_final_data_set(column_managers):
+    template = build_data_set_template()
+    reports = get_all_reports(column_managers)
+
+    for report in reports:
+        print(report)
+        # for job_type in report:
+        #     for metric in job_type:
+        #         for system in metric:
+                    # template[job_type][metric][system].append(report[job_type][metric][system])
+                    # print(template[job_type][metric])
+
+    return template
+
+
+    '''
+    Comments below are experimenting w/ average file/ data structures
+    '''
+
+    # excel_file_paths = format_file.get_file_paths(".xlsx")
+    #
+    # column_managers = []
+    #
+    # for file_path in excel_file_paths:
+    #     column_managers.append(columnmanager.ColumnManager(file_path, SHEET_TITLE))
+    #
+    #
+    # manager = column_managers[0]
+    #
+    # report = Report(manager, "Labor $/Hr", "Mat Labor.", "Total Hrs")
+    # print("\n")
+    #
+    # for value in report.all_metrics:
+    #     print(value, "\n")

@@ -10,10 +10,6 @@ import json
 with open("config.json", "r") as config_file:
     configs = json.load(config_file)
 
-# Change these variables so they're not so verbose
-labor_dollar_hr_title = configs['LABOR $/Hr Title']
-labor_dollar_unit_area_title = configs['LABOR HOURS/UNIT AREA']
-
 
 class ColumnManager:
 
@@ -297,5 +293,29 @@ class ColumnManager:
             error_logger.logger(statement, traceback_error)
 
 
+    def get_base_bid_values(self, title, row=2):
+        '''
+        Return a list of values for systems that are part of the Base Bid
+        Relies on seperate 'Bid Item' column with values of ' || Base Bid' for lookup
+        '''
+
+        bid_item_values = self.get_column_values("Bid Item", row=row)
+        system_values = self.get_column_values(title, row=row)
+
+        results = []
+
+        for value in range(len(bid_item_values)):
+            if bid_item_values[value] == " || Base Bid":
+                results.append(system_values[value])
+        return results
+
+
     def get_jobtype(self):
-        return self.sheet.cell(row=1, column=1).value
+        try:
+            job_type = self.sheet.cell(row=1, column=1).value
+            if job_type is None:
+                raise TypeError
+            return job_type
+        except Exception as traceback_error:
+            statement = "\nMake sure you select a job type for file {}".format(self.file_name.upper())
+            error_logger.logger(statement, traceback_error)
