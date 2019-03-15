@@ -31,8 +31,8 @@ def run_program(sheet_title):
         error_logger.logger(traceback_error=traceback_error)
 
     column_managers = [columnmanager.ColumnManager(path, SHEET_TITLE) for path in excel_file_paths]
-    result = avg.build_final_data_set(column_managers)
-    print(result)
+    result = avg.build_avg_data(column_managers)
+    # print(result)
 
 def main():
     '''
