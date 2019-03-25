@@ -19,7 +19,6 @@ class ColumnManager:
         self.workbook = self.load_workbook(file_location)
         self.sheet = self.get_sheet(self.workbook, sheet_name)
 
-
     def load_workbook(self, file_location):
         """
         Loads workbook object from excel file
@@ -48,23 +47,24 @@ class ColumnManager:
         try:
             return workbook_name[sheet_name]
         except Exception as traceback_error:
-            statement = "Can't find sheet {}".format(
-                sheet_name)
+            statement = "Can't find sheet {} for {}".format(
+                sheet_name, self.file_name)
             error_logger.logger(statement, traceback_error)
 
-    def make_new_column(self, title):
+    def make_new_column(self, title, column_start=1):
         """
         Create column w/ given title
         """
         column_titles = self.get_column_titles()
 
         if title in column_titles:
-            statement = "Column title {} NOT added- already exists for file {}".format(title, self.file_name)
+            statement = "Column title {} NOT added- already exists for file {}".format(
+                title, self.file_name)
             error_logger.logger(statement)
         else:
             try:
                 max_column = self.sheet.max_column
-                self.sheet.cell(row=1, column=max_column+1).value = title
+                self.sheet.cell(row=1, column=max_column+column_start).value = title
                 error_logger.logger("{} column title added".format(title))
             except Exception as traceback_error:
                 statement = "Something went wrong with building column {}".format(title)
@@ -89,7 +89,6 @@ class ColumnManager:
         except Exception as traceback_error:
             statement = "Problem reading value from cell 'A1'"
             error_logger.logger(statement, traceback_error)
-
 
     def get_column_titles(self, row=1):
         """
@@ -176,7 +175,6 @@ class ColumnManager:
                 error_logger.logger(traceback_error=traceback_error)
             row += 1
 
-
     def set_column_values(self, title, values, row=2):
         """
         Sets cell values for given column
@@ -192,7 +190,6 @@ class ColumnManager:
             error_logger.logger("Values added to column {}".format(title))
 
             try:
-
                 for i in range(len(cells_to_set)):
                     self.sheet.cell(row=row, column=index).value = values[i]
                     row += 1
@@ -200,7 +197,6 @@ class ColumnManager:
                 statement = "Problem setting cell values for column {}".format(title)
                 error_logger.logger(statement, traceback_error)
                 # row += 1
-
 
     def print_column_values(self, title, row=1):
         """
@@ -241,9 +237,9 @@ class ColumnManager:
             return divided_formulas
 
         except Exception as traceback_error:
-            statement = "Problem dividing {} values with {} values".format(first_title, second_title)
+            statement = "Problem dividing {} values with {} values".format(
+                first_title, second_title)
             error_logger.logger(statement, traceback_error)
-
 
     def gen_new_metric_column(self, new_title, numer_column, denom_column, with_formulas=False, row=1):
         '''
@@ -263,7 +259,6 @@ class ColumnManager:
             print(traceback_error)
             statement = "Trouble with generating {} column".format(new_title)
             error_logger.logger(statement, traceback_error)
-
 
     def color_column(self, title, color="B3FFB3"):
         """
@@ -292,7 +287,6 @@ class ColumnManager:
             statement = "Trouble with adding validation drop-down menu"
             error_logger.logger(statement, traceback_error)
 
-
     def get_base_bid_values(self, title, row=2):
         '''
         Return a list of values for systems that are part of the Base Bid
@@ -307,8 +301,13 @@ class ColumnManager:
         for value in range(len(bid_item_values)):
             if bid_item_values[value] == " || Base Bid":
                 results.append(system_values[value])
+        # print(results)
+        # for nu in results:
+        #     try:
+        #         print(self.workbook[nu].value)
+        #     except KeyError:
+        #         continue
         return results
-
 
     def get_jobtype(self):
         try:
@@ -317,5 +316,6 @@ class ColumnManager:
                 raise TypeError
             return job_type
         except Exception as traceback_error:
-            statement = "\nMake sure you select a job type for file {}".format(self.file_name.upper())
+            statement = "\nMake sure you select a job type for file {}".format(
+                self.file_name.upper())
             error_logger.logger(statement, traceback_error)

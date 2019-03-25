@@ -38,7 +38,12 @@
                   " || DAS Life Safety System",
                   " || Access Control Rough-In",
                   " || CCTV Rough-In",
-                  " || Temporary Power"
+                  " || Temporary Power",
+                  " || Uninterruptable Power Supply",
+                  " || Mechanical OS Control",
+                  " || Site Power",
+                  " || Panic Rough-In",
+                  " || General Conditions"
                   ],
     "COLUMN_COLOR": "00FFFF",
     "WITH_FORMULAS": false,
